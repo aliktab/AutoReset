@@ -20,22 +20,31 @@
 
 
 #include <PwCore.h>
+#include <Time.h>
 
+const uint8_t PIN_ONOFF  = 0x1;
+const uint8_t PIN_PING   = 0x2;
+const uint8_t PIN_RESET  = 0x0;
+
+const time_t PING_TIMEOUT = 9 * 1000;
+
+time_t curr_time = 0;
+time_t ping_time = 0;
 
 // Initialization
 
 void setup()
 {
   // Initializeline pins mode, value, state and timer.
-  for (int idx = 0; idx < sizeof(PIN_FAN) / sizeof(uint8_t); idx++)
-  {
-    pinMode(PIN_FAN[idx], OUTPUT);
-    digitalWrite(PIN_FAN[idx], LOW);
-  }
+  pinMode(PIN_ONOFF, INPUT);
+  pinMode(PIN_PING, INPUT);
+
+  pinMode(PIN_RESET, OUTPUT);
+  digitalWrite(PIN_RESET, HIGH);
 
   // Initialize time system.
-  start_time = millis();
-  mode_time = 0;
+  setTime(0);
+  ping_time = now();
 }
 
 
@@ -43,7 +52,15 @@ void setup()
 
 void loop()
 {
+  if (HIGH == digitalRead(PIN_ONOFF))
+  {
+    if (HIGH == digitalRead(PIN_PING))
+      ping_time = now();
+  }
+  else
+    ping_time = now();
 
+  digitalWrite(PIN_RESET, (now() - ping_time < PING_TIMEOUT) ? HIGH : LOW);
 }
 
 
